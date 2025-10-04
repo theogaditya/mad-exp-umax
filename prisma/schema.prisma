@@ -13,8 +13,8 @@ model User {
   age       Int?
   isSpecial Boolean  @default(false)
   createdAt DateTime @default(now())
-  clerkId   String   @unique
   email     String   @unique
+  password  String
   firstName String?
   lastName  String?
   updatedAt DateTime @updatedAt

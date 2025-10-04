@@ -1,13 +1,13 @@
-import { auth } from '@clerk/nextjs/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { getUserFromRequest } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import redis from '@/lib/redis';
-import { NextResponse } from 'next/server';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
+    const user = await getUserFromRequest(request);
     
-    if (!userId) {
+    if (!user) {
       return NextResponse.json(
         { 
           success: false, 
@@ -32,11 +32,11 @@ export async function POST(request: Request) {
     }
 
     // Verify user exists
-    const user = await prisma.user.findFirst({
-      where: { clerkId: userId }
+    const dbUser = await prisma.user.findFirst({
+      where: { id: user.id }
     });
 
-    if (!user) {
+    if (!dbUser) {
       return NextResponse.json(
         { 
           success: false, 

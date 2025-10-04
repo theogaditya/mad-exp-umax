@@ -5,8 +5,8 @@ export interface User {
   age: number | null;
   isSpecial: boolean;
   createdAt: Date;
-  clerkId: string;
   email: string;
+  password?: string;
   firstName: string | null;
   lastName: string | null;
   updatedAt: Date;
@@ -110,14 +110,15 @@ export interface RedisToken {
   status: string;
 }
 
-// Clerk user data
-export interface ClerkUserData {
+// Auth user data
+export interface AuthUserData {
   id: string;
-  email_addresses: Array<{
-    email_address: string;
-  }>;
-  first_name: string | null;
-  last_name: string | null;
+  email: string;
+  name: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  age?: number | null;
+  isSpecial: boolean;
 }
 
 // Redis singleton interface

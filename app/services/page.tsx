@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useUser } from '@clerk/nextjs';
+import { useAuth } from '@/lib/useAuth';
 import { 
   Stethoscope, 
   Heart, 
@@ -60,7 +60,7 @@ const departmentIcons: { [key: string]: React.ComponentType<{ className?: string
 };
 
 export default function ServicesPage() {
-  const { user, isLoaded } = useUser();
+  const { user, loading: authLoading } = useAuth();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -71,10 +71,10 @@ export default function ServicesPage() {
   const [showConfirmation, setShowConfirmation] = useState(false);
 
   useEffect(() => {
-    if (isLoaded && user) {
+    if (!authLoading && user) {
       loadData();
     }
-  }, [isLoaded, user]);
+  }, [authLoading, user]);
 
   const loadData = async () => {
     try {
@@ -222,7 +222,7 @@ export default function ServicesPage() {
     return userData && (userData.isSpecial || (userData.age && userData.age >= 70));
   };
 
-  if (!isLoaded || loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center safe-area-padding">
         <div className="text-center">

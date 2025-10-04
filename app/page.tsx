@@ -1,10 +1,12 @@
 'use client';
 
-import { SignedIn, SignedOut, SignInButton, SignUpButton } from '@clerk/nextjs';
 import { User, ArrowRight, Shield, Clock, Users, Heart, Zap } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth } from '@/lib/useAuth';
 
 export default function Home() {
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
@@ -18,29 +20,27 @@ export default function Home() {
               <span className="text-xl font-semibold text-gray-900">Q-Flow</span>
             </div>
 
-            <SignedOut>
+            {!user ? (
               <div className="flex items-center space-x-4">
-                <SignInButton>
+                <Link href="/login">
                   <button className="text-gray-600 hover:text-gray-900 font-medium transition-colors duration-200 text-sm sm:text-base">
                     Sign In
                   </button>
-                </SignInButton>
-                <SignUpButton>
+                </Link>
+                <Link href="/register">
                   <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 sm:px-6 sm:py-2 rounded-full font-medium transition-all duration-200 transform hover:scale-105 text-sm sm:text-base">
                     Get Started
                   </button>
-                </SignUpButton>
+                </Link>
               </div>
-            </SignedOut>
-
-            <SignedIn>
+            ) : (
               <Link href="/profile">
                 <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 sm:px-6 sm:py-2 rounded-full font-medium transition-all duration-200 flex items-center space-x-2 text-sm sm:text-base">
                   <User className="w-4 h-4" />
                   <span>Profile</span>
                 </button>
               </Link>
-            </SignedIn>
+            )}
           </div>
         </div>
       </nav>
@@ -66,36 +66,38 @@ export default function Home() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
-              <SignedOut>
-                <SignUpButton>
-                  <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-full font-semibold text-base sm:text-lg transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 w-full sm:w-auto justify-center">
-                    <span>Get Started</span>
-                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </button>
-                </SignUpButton>
-                <SignInButton>
-                  <button className="border border-gray-300 hover:border-gray-400 text-gray-700 px-6 py-3 sm:px-8 sm:py-4 rounded-full font-semibold text-base sm:text-lg transition-all duration-200 flex items-center space-x-2 w-full sm:w-auto justify-center">
-                    <span>Login</span>
-                  </button>
-                </SignInButton>
-              </SignedOut>
-
-              <SignedIn>
-                <Link href="/profile" className="w-full sm:w-auto">
-                  <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-full font-semibold text-base sm:text-lg transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 w-full justify-center">
-                    <User className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>Profile</span>
-                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </button>
-                </Link>
-                <Link href="/services" className="w-full sm:w-auto">
-                  <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-full font-semibold text-base sm:text-lg transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 w-full justify-center mt-3 sm:mt-0">
-                    <Users className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>Explore Services</span>
-                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </button>
-                </Link>
-              </SignedIn>
+              {!user ? (
+                <>
+                  <Link href="/register" className="w-full sm:w-auto">
+                    <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-full font-semibold text-base sm:text-lg transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 w-full sm:w-auto justify-center">
+                      <span>Get Started</span>
+                      <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </button>
+                  </Link>
+                  <Link href="/login" className="w-full sm:w-auto">
+                    <button className="border border-gray-300 hover:border-gray-400 text-gray-700 px-6 py-3 sm:px-8 sm:py-4 rounded-full font-semibold text-base sm:text-lg transition-all duration-200 flex items-center space-x-2 w-full sm:w-auto justify-center">
+                      <span>Login</span>
+                    </button>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link href="/profile" className="w-full sm:w-auto">
+                    <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-full font-semibold text-base sm:text-lg transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 w-full justify-center">
+                      <User className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span>Profile</span>
+                      <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </button>
+                  </Link>
+                  <Link href="/services" className="w-full sm:w-auto">
+                    <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-full font-semibold text-base sm:text-lg transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 w-full justify-center mt-3 sm:mt-0">
+                      <Users className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span>Explore Services</span>
+                      <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -1,14 +1,14 @@
-import { auth } from '@clerk/nextjs/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { getUserFromRequest } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import redis from '@/lib/redis';
-import { NextResponse } from 'next/server';
 import { Counter, TokenAssignment } from '@/lib/types';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
+    const user = await getUserFromRequest(request);
     
-    if (!userId) {
+    if (!user) {
       return NextResponse.json(
         { 
           success: false, 
@@ -19,10 +19,10 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { departmentId, userId: requestUserId, userAge, isSpecial } = body;
+    const { departmentId, userAge, isSpecial } = body;
 
     // Validate input
-    if (!departmentId || !requestUserId) {
+    if (!departmentId) {
       return NextResponse.json(
         { 
           success: false, 
@@ -33,8 +33,8 @@ export async function POST(request: Request) {
     }
 
     // Verify user exists and get user data
-    const user = await prisma.user.findFirst({
-      where: { clerkId: userId },
+    const dbUser = await prisma.user.findFirst({
+      where: { id: user.id },
       include: {
         tokens: {
           where: {
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
       }
     });
 
-    if (!user) {
+    if (!dbUser) {
       return NextResponse.json(
         { 
           success: false, 
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
     }
 
     // Check if user already has a waiting token in this department
-    const existingToken = user.tokens.find(token => 
+    const existingToken = user.tokens?.find(token => 
       token.departmentId === departmentId && token.status === 'WAITING'
     );
 
@@ -192,7 +192,7 @@ export async function POST(request: Request) {
 
     // Store token assignment temporarily in Redis (5 minutes expiry)
     try {
-      const assignmentKey = `assignment:${userId}:${nextTokenNumber}`;
+      const assignmentKey = `assignment:${user.id}:${nextTokenNumber}`;
       const assignmentData: TokenAssignment = {
         tokenNumber: nextTokenNumber,
         counterId: assignedCounter.id,

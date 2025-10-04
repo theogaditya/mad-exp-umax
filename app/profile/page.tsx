@@ -1,13 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useUser } from '@clerk/nextjs';
+import { useAuth } from '@/lib/useAuth';
 import { User, Mail, Calendar, Ticket, Settings, ChevronRight, Star, Zap, Heart, Shield } from 'lucide-react';
 import CompleteApplication from '@/components/CompleteApplication';
 
 interface UserData {
   id: string;
-  clerkId: string;
   email: string;
   firstName: string;
   lastName: string;
@@ -28,17 +27,17 @@ interface UserData {
 }
 
 export default function ProfilePage() {
-  const { user, isLoaded } = useUser();
+  const { user, loading: authLoading } = useAuth();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'tokens' | 'settings'>('overview');
 
   useEffect(() => {
-    if (isLoaded && user) {
+    if (!authLoading && user) {
       checkUserStatus();
     }
-  }, [isLoaded, user]);
+  }, [authLoading, user]);
 
   const checkUserStatus = async () => {
     try {
@@ -111,7 +110,7 @@ export default function ProfilePage() {
     return 'text-red-600';
   };
 
-  if (!isLoaded || loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">

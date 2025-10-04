@@ -1,12 +1,12 @@
-import { auth } from '@clerk/nextjs/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { getUserFromRequest } from '@/lib/auth';
 import prisma from '@/lib/prisma';
-import { NextResponse } from 'next/server';
 
-export async function PATCH(request: Request) {
+export async function PATCH(request: NextRequest) {
   try {
-    const { userId } = await auth();
+    const user = await getUserFromRequest(request);
     
-    if (!userId) {
+    if (!user) {
       return NextResponse.json(
         { 
           success: false, 
@@ -50,24 +50,9 @@ export async function PATCH(request: Request) {
       );
     }
 
-    // Check if user exists
-    const existingUser = await prisma.user.findFirst({
-      where: { clerkId: userId }
-    });
-
-    if (!existingUser) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          message: 'User not found' 
-        },
-        { status: 404 }
-      );
-    }
-
     // Update user profile
     const updatedUser = await prisma.user.update({
-      where: { id: existingUser.id },
+      where: { id: user.id },
       data: {
         age: age,
         isSpecial: isSpecial,
@@ -85,7 +70,6 @@ export async function PATCH(request: Request) {
       success: true,
       user: {
         id: updatedUser.id,
-        clerkId: updatedUser.clerkId,
         email: updatedUser.email,
         firstName: updatedUser.firstName,
         lastName: updatedUser.lastName,

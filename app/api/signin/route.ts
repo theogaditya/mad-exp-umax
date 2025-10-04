@@ -1,13 +1,13 @@
-import { auth } from '@clerk/nextjs/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { getUserFromRequest } from '@/lib/auth';
 import prisma from '@/lib/prisma';
-import { NextResponse } from 'next/server';
-import { Token, ClerkUserData } from '@/lib/types';
+import { Token } from '@/lib/types';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
+    const user = await getUserFromRequest(request);
     
-    if (!userId) {
+    if (!user) {
       return NextResponse.json(
         { 
           signedIn: false, 
@@ -16,8 +16,9 @@ export async function GET() {
         { status: 401 }
       );
     }
-    const existingUser = await prisma.user.findFirst({
-      where: { clerkId: userId },
+
+    const userWithTokens = await prisma.user.findUnique({
+      where: { id: user.id },
       include: {
         tokens: {
           orderBy: { createdAt: 'desc' },
@@ -30,20 +31,19 @@ export async function GET() {
       }
     });
 
-    if (existingUser) {
+    if (userWithTokens) {
       return NextResponse.json({
         signedIn: true,
         user: {
-          id: existingUser.id,
-          clerkId: existingUser.clerkId,
-          email: existingUser.email,
-          firstName: existingUser.firstName,
-          lastName: existingUser.lastName,
-          name: existingUser.name,
-          age: existingUser.age,
-          isSpecial: existingUser.isSpecial,
-          createdAt: existingUser.createdAt,
-          tokens: existingUser.tokens.map((token: Token & { department?: { name: string }; counter?: { name: string } }) => ({
+          id: userWithTokens.id,
+          email: userWithTokens.email,
+          firstName: userWithTokens.firstName,
+          lastName: userWithTokens.lastName,
+          name: userWithTokens.name,
+          age: userWithTokens.age,
+          isSpecial: userWithTokens.isSpecial,
+          createdAt: userWithTokens.createdAt,
+          tokens: userWithTokens.tokens.map((token: Token & { department?: { name: string }; counter?: { name: string } }) => ({
             id: token.id,
             tokenNumber: token.tokenNumber,
             status: token.status,
@@ -76,11 +76,11 @@ export async function GET() {
   }
 }
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
+    const user = await getUserFromRequest(request);
     
-    if (!userId) {
+    if (!user) {
       return NextResponse.json(
         { 
           success: false, 
@@ -90,23 +90,9 @@ export async function POST() {
       );
     }
 
-    // Get user info from Clerk
-    const clerkUser = await fetch(`https://api.clerk.com/v1/users/${userId}`, {
-      headers: {
-        'Authorization': `Bearer ${process.env.CLERK_SECRET_KEY}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!clerkUser.ok) {
-      throw new Error('Failed to fetch user from Clerk');
-    }
-
-    const clerkUserData: ClerkUserData = await clerkUser.json();
-    
     // Check if user already exists
-    const existingUser = await prisma.user.findFirst({
-      where: { clerkId: userId }
+    const existingUser = await prisma.user.findUnique({
+      where: { id: user.id }
     });
 
     if (existingUser) {
@@ -117,25 +103,9 @@ export async function POST() {
       });
     }
 
-    // Create new user in database
-    const newUser = await prisma.user.create({
-      data: {
-        clerkId: userId,
-        email: clerkUserData.email_addresses[0]?.email_address || '',
-        firstName: clerkUserData.first_name || '',
-        lastName: clerkUserData.last_name || '',
-        name: `${clerkUserData.first_name || ''} ${clerkUserData.last_name || ''}`.trim() || 'User',
-        isSpecial: false
-      },
-      include: {
-        tokens: true
-      }
-    });
-
     return NextResponse.json({
-      success: true,
-      user: newUser,
-      message: 'User created successfully'
+      success: false,
+      message: 'User not found'
     });
 
   } catch (error) {

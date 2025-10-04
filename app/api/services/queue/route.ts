@@ -1,14 +1,14 @@
-import { auth } from '@clerk/nextjs/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { getUserFromRequest } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import QueueManager from '@/lib/queueManager';
-import { NextResponse } from 'next/server';
 import { Department, Counter } from '@/lib/types';
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
+    const user = await getUserFromRequest(request);
     
-    if (!userId) {
+    if (!user) {
       return NextResponse.json(
         { 
           success: false, 
@@ -99,11 +99,11 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
+    const user = await getUserFromRequest(request);
     
-    if (!userId) {
+    if (!user) {
       return NextResponse.json(
         { 
           success: false, 
