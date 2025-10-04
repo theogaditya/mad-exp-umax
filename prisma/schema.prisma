@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  age       Int?
+  isSpecial Boolean  @default(false)
+  createdAt DateTime @default(now())
+  clerkId   String   @unique
+  email     String   @unique
+  firstName String?
+  lastName  String?
+  updatedAt DateTime @updatedAt
+  tokens    Token[]
+}
+
+model Admin {
+  id       String @id @default(cuid())
+  username String @unique
+  password String
+}
+
+model Department {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  counters  Counter[]
+  tokens    Token[]
+  doctors   Doctor[]
+}
+
+model Doctor {
+  id          String       @id @default(cuid())
+  name        String
+  department  Department?  @relation(fields: [departmentId], references: [id])
+  departmentId String?
+  tokens      Token[]
+}
+
+model Counter {
+  id           String       @id @default(cuid())
+  name         String
+  department   Department   @relation(fields: [departmentId], references: [id])
+  departmentId String
+  isSpecial    Boolean      @default(false)
+  createdAt    DateTime     @default(now())
+  tokens       Token[]
+}
+
+model Token {
+  id           String     @id @default(cuid())
+  tokenNumber  Int        @unique
+  userId       String
+  counterId    String
+  departmentId String
+  doctorId     String?
+  isPriority   Boolean    @default(false)
+  status       String     @default("WAITING")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  department   Department @relation(fields: [departmentId], references: [id])
+  counter      Counter    @relation(fields: [counterId], references: [id])
+  doctor       Doctor?    @relation(fields: [doctorId], references: [id])
+  user         User       @relation(fields: [userId], references: [id])
+}
